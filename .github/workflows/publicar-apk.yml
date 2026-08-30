@@ -1,0 +1,40 @@
+name: Publicar APK atualizado
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publicar-apk.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Baixar APK compilado
+        env:
+          ARTIFACT_URL: "https://sdmntprbrazilsouth.oaiusercontent.com/files/00000000-3f30-820e-9275-56ea5809b4a7/raw?se=2026-08-30T02%3A03%3A17Z&sp=r&sv=2026-02-06&sr=b&scid=685eab7d-71d8-502c-9cb3-3d9989ae89d3&skoid=4a431cd2-eafd-49c7-90be-bbb4d45e696d&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-08-29T11%3A41%3A50Z&ske=2026-08-30T11%3A41%3A50Z&sks=b&skv=2026-02-06&sig=M73NXeaGpXkynmzxuwVGbR0YDRbnhQ74koI%2B2GQQTVY%3D"
+        run: |
+          curl -L --fail "$ARTIFACT_URL" -o /tmp/nvchat.zip
+          mkdir -p /tmp/nvchat
+          unzip -o /tmp/nvchat.zip -d /tmp/nvchat
+          APK=$(find /tmp/nvchat -type f -name '*.apk' | head -n 1)
+          test -n "$APK"
+          cp "$APK" NV-Chat.apk
+
+      - name: Publicar APK no site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add NV-Chat.apk
+          if git diff --cached --quiet; then
+            echo "APK sem alteração"
+            exit 0
+          fi
+          git commit -m "Publica NV Chat com assinatura fixa e melhorias"
+          git push
