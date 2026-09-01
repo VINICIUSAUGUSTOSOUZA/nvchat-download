@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#111827">
   <title>NV Chat - Download</title>
+  <link rel="stylesheet" href="assets/testers.css">
   <style>
     * { box-sizing: border-box; }
     body {
@@ -117,7 +118,43 @@
       </div>
     </section>
 
+    <section class="card tester-card" id="quero-ser-testador" aria-labelledby="tester-title">
+      <div class="tester-badge">Faça parte dos primeiros testadores do NVChat.</div>
+      <h2 id="tester-title">Quero ser testador do NVChat</h2>
+      <p class="tester-copy"><strong>Ajude a testar o NVChat.</strong> Quer participar dos testes e receber acesso às próximas versões? Cadastre seu Gmail abaixo.</p>
+
+      <form id="tester-form" novalidate>
+        <div class="field">
+          <label for="tester-name">Nome <span>(opcional)</span></label>
+          <input id="tester-name" name="name" type="text" maxlength="120" autocomplete="name" placeholder="Seu nome">
+        </div>
+
+        <div class="field">
+          <label for="tester-email">Gmail</label>
+          <input id="tester-email" name="email" type="email" maxlength="254" autocomplete="email" inputmode="email" required placeholder="seunome@gmail.com">
+          <small>Use de preferência a conta Google que será usada na Google Play.</small>
+        </div>
+
+        <div class="hp-field" aria-hidden="true">
+          <label for="company">Empresa</label>
+          <input id="company" name="company" type="text" tabindex="-1" autocomplete="off">
+        </div>
+
+        <label class="consent-row" for="tester-consent">
+          <input id="tester-consent" name="consent" type="checkbox" required>
+          <span>Autorizo o uso deste e-mail exclusivamente para contato relacionado aos testes do NVChat.</span>
+        </label>
+
+        <button class="tester-submit" id="tester-submit" type="submit">Quero participar dos testes</button>
+        <div id="tester-message" class="form-message" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+
     <div class="footer">NV Chat · <a href="privacy.html">Política de Privacidade</a></div>
   </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase-config.js"></script>
+  <script src="assets/testers.js"></script>
 </body>
 </html>
