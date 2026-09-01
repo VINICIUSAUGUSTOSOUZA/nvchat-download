@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#111827">
+  <meta name="theme-color" content="#166534">
   <title>NV Chat - Download</title>
   <link rel="stylesheet" href="assets/testers.css">
   <style>
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
@@ -15,17 +16,83 @@
       color: #111827;
       line-height: 1.55;
     }
-    .wrap {
-      width: 100%;
-      max-width: 560px;
+    button, input { font: inherit; }
+    a { color: inherit; }
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 255, 255, .96);
+      border-bottom: 1px solid #e5e7eb;
+      backdrop-filter: blur(10px);
+    }
+    .nav-wrap {
+      width: min(1180px, 100%);
+      min-height: 62px;
       margin: 0 auto;
-      padding: 24px 16px 40px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .brand {
+      color: #166534;
+      text-decoration: none;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.3px;
+    }
+    .site-menu {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .site-menu a {
+      padding: 9px 11px;
+      border-radius: 8px;
+      color: #374151;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .site-menu a:hover,
+    .site-menu a:focus-visible {
+      background: #f0fdf4;
+      color: #166534;
+      outline: none;
+    }
+    .site-menu .admin-link {
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+    .menu-toggle {
+      display: none;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 8px 11px;
+      background: #fff;
+      color: #111827;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .wrap {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 28px 16px 40px;
+    }
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+      gap: 18px;
     }
     .card {
       background: #ffffff;
       border-radius: 14px;
-      padding: 24px 18px;
+      padding: 24px 20px;
       box-shadow: 0 2px 10px rgba(0,0,0,.08);
+      scroll-margin-top: 82px;
     }
     h1 {
       margin: 0 0 6px;
@@ -51,6 +118,8 @@
       border-radius: 10px;
       margin-bottom: 24px;
     }
+    .download:hover,
+    .download:focus-visible { background: #14532d; }
     h2 {
       margin: 20px 0 10px;
       font-size: 21px;
@@ -81,74 +150,119 @@
     }
     .footer {
       text-align: center;
-      margin-top: 18px;
+      margin-top: 20px;
       color: #6b7280;
       font-size: 13px;
     }
     .footer a { color: #166534; }
+    @media (max-width: 860px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+      .nav-wrap { min-height: 56px; position: relative; }
+      .menu-toggle { display: inline-flex; align-items: center; }
+      .site-menu {
+        display: none;
+        position: absolute;
+        top: calc(100% - 1px);
+        left: 10px;
+        right: 10px;
+        padding: 8px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.10);
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .site-menu.open { display: flex; }
+      .site-menu a { width: 100%; }
+      .site-menu .admin-link { border: 0; }
+      .wrap { padding-top: 18px; }
+      .card { scroll-margin-top: 70px; }
+    }
+    @media (max-width: 480px) {
+      .card { padding: 20px 16px; }
+      h1 { font-size: 27px; }
+      .download { font-size: 18px; }
+    }
   </style>
 </head>
-<body>
+<body id="topo">
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="#topo">NVChat</a>
+      <button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-menu">Menu</button>
+      <nav id="site-menu" class="site-menu" aria-label="Navegação principal">
+        <a href="#baixar">Baixar</a>
+        <a href="#quero-ser-testador">Ser testador</a>
+        <a class="admin-link" href="admin.html">Administrador</a>
+      </nav>
+    </div>
+  </header>
+
   <main class="wrap">
-    <section class="card">
-      <h1>NV Chat</h1>
-      <p class="sub">APK universal para Android 6 ou superior — compatível com Samsung J5 Android 7</p>
+    <div class="main-grid">
+      <section class="card" id="baixar" aria-labelledby="download-title">
+        <h1 id="download-title">NV Chat</h1>
+        <p class="sub">APK universal para Android 6 ou superior — compatível com Samsung J5 Android 7</p>
 
-      <a class="download" href="NVChat-Android7-universal.apk" download>BAIXAR NV CHAT — ANDROID 7</a>
+        <a class="download" href="NVChat-Android7-universal.apk" download>BAIXAR NV CHAT — ANDROID 7</a>
 
-      <h2>Como instalar</h2>
-      <ol>
-        <li>Toque em <strong>BAIXAR NV CHAT</strong>.</li>
-        <li>O celular pode mostrar um aviso de segurança informando que o aplicativo foi baixado fora da Play Store.</li>
-        <li>Leia o aviso e procure uma opção para continuar, como <strong>Mais detalhes</strong>, <strong>Continuar</strong>, <strong>Instalar mesmo assim</strong>, <strong>Permitir desta fonte</strong> ou <strong>Configurações</strong>.</li>
-        <li>Se aparecer uma verificação do <strong>Google Play Protect</strong>, aguarde a verificação e siga as opções mostradas pelo próprio celular.</li>
-        <li>Se a instalação estiver bloqueada, abra <strong>Configurações</strong> e permita temporariamente a instalação de aplicativos dessa fonte.</li>
-        <li>Volte ao arquivo <strong>NVChat-Android7-universal.apk</strong> e toque em <strong>Instalar</strong>.</li>
-        <li>Quando terminar, toque em <strong>Abrir</strong>.</li>
-      </ol>
+        <h2>Como instalar</h2>
+        <ol>
+          <li>Toque em <strong>BAIXAR NV CHAT</strong>.</li>
+          <li>O celular pode mostrar um aviso de segurança informando que o aplicativo foi baixado fora da Play Store.</li>
+          <li>Leia o aviso e procure uma opção para continuar, como <strong>Mais detalhes</strong>, <strong>Continuar</strong>, <strong>Instalar mesmo assim</strong>, <strong>Permitir desta fonte</strong> ou <strong>Configurações</strong>.</li>
+          <li>Se aparecer uma verificação do <strong>Google Play Protect</strong>, aguarde a verificação e siga as opções mostradas pelo próprio celular.</li>
+          <li>Se a instalação estiver bloqueada, abra <strong>Configurações</strong> e permita temporariamente a instalação de aplicativos dessa fonte.</li>
+          <li>Volte ao arquivo <strong>NVChat-Android7-universal.apk</strong> e toque em <strong>Instalar</strong>.</li>
+          <li>Quando terminar, toque em <strong>Abrir</strong>.</li>
+        </ol>
 
-      <div class="options">
-        <strong>Os nomes dos botões podem variar.</strong>
-        Procure opções parecidas com:<br>
-        Mais detalhes • Continuar • Instalar mesmo assim • Permitir desta fonte • Configurações
-      </div>
-
-      <div class="note">
-        <strong>Importante:</strong> depois que o NV Chat estiver instalado, você pode desativar novamente a permissão para instalar aplicativos de fontes desconhecidas.
-      </div>
-    </section>
-
-    <section class="card tester-card" id="quero-ser-testador" aria-labelledby="tester-title">
-      <div class="tester-badge">Faça parte dos primeiros testadores do NVChat.</div>
-      <h2 id="tester-title">Quero ser testador do NVChat</h2>
-      <p class="tester-copy"><strong>Ajude a testar o NVChat.</strong> Quer participar dos testes e receber acesso às próximas versões? Cadastre seu Gmail abaixo.</p>
-
-      <form id="tester-form" novalidate>
-        <div class="field">
-          <label for="tester-name">Nome <span>(opcional)</span></label>
-          <input id="tester-name" name="name" type="text" maxlength="120" autocomplete="name" placeholder="Seu nome">
+        <div class="options">
+          <strong>Os nomes dos botões podem variar.</strong>
+          Procure opções parecidas com:<br>
+          Mais detalhes • Continuar • Instalar mesmo assim • Permitir desta fonte • Configurações
         </div>
 
-        <div class="field">
-          <label for="tester-email">Gmail</label>
-          <input id="tester-email" name="email" type="email" maxlength="254" autocomplete="email" inputmode="email" required placeholder="seunome@gmail.com">
-          <small>Use de preferência a conta Google que será usada na Google Play.</small>
+        <div class="note">
+          <strong>Importante:</strong> depois que o NV Chat estiver instalado, você pode desativar novamente a permissão para instalar aplicativos de fontes desconhecidas.
         </div>
+      </section>
 
-        <div class="hp-field" aria-hidden="true">
-          <label for="company">Empresa</label>
-          <input id="company" name="company" type="text" tabindex="-1" autocomplete="off">
-        </div>
+      <section class="card tester-card" id="quero-ser-testador" aria-labelledby="tester-title">
+        <div class="tester-badge">Faça parte dos primeiros testadores do NVChat.</div>
+        <h2 id="tester-title">Quero ser testador do NVChat</h2>
+        <p class="tester-copy"><strong>Ajude a testar o NVChat.</strong> Quer participar dos testes e receber acesso às próximas versões? Cadastre seu Gmail abaixo.</p>
 
-        <label class="consent-row" for="tester-consent">
-          <input id="tester-consent" name="consent" type="checkbox" required>
-          <span>Autorizo o uso deste e-mail exclusivamente para contato relacionado aos testes do NVChat.</span>
-        </label>
+        <form id="tester-form" novalidate>
+          <div class="field">
+            <label for="tester-name">Nome <span>(opcional)</span></label>
+            <input id="tester-name" name="name" type="text" maxlength="120" autocomplete="name" placeholder="Seu nome">
+          </div>
 
-        <button class="tester-submit" id="tester-submit" type="submit">Quero participar dos testes</button>
-        <div id="tester-message" class="form-message" role="status" aria-live="polite"></div>
-      </form>
-    </section>
+          <div class="field">
+            <label for="tester-email">Gmail/e-mail</label>
+            <input id="tester-email" name="email" type="email" maxlength="254" autocomplete="email" inputmode="email" required placeholder="seunome@gmail.com">
+            <small>Use de preferência a conta Google que será usada na Google Play.</small>
+          </div>
+
+          <div class="hp-field" aria-hidden="true">
+            <label for="company">Empresa</label>
+            <input id="company" name="company" type="text" tabindex="-1" autocomplete="off">
+          </div>
+
+          <label class="consent-row" for="tester-consent">
+            <input id="tester-consent" name="consent" type="checkbox" required>
+            <span>Autorizo o uso deste e-mail exclusivamente para contato relacionado aos testes do NVChat.</span>
+          </label>
+
+          <button class="tester-submit" id="tester-submit" type="submit">Quero participar dos testes</button>
+          <div id="tester-message" class="form-message" role="status" aria-live="polite"></div>
+        </form>
+      </section>
+    </div>
 
     <div class="footer">NV Chat · <a href="privacy.html">Política de Privacidade</a></div>
   </main>
@@ -156,5 +270,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/supabase-config.js"></script>
   <script src="assets/testers.js"></script>
+  <script src="assets/site.js"></script>
 </body>
 </html>

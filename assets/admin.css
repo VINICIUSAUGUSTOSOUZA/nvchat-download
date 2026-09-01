@@ -12,6 +12,15 @@ button { cursor: pointer; }
   margin: 0 auto;
   padding: 24px 16px 40px;
 }
+.back-link {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: #166534;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 14px;
+}
+.back-link:hover { text-decoration: underline; }
 .panel {
   background: #fff;
   border-radius: 14px;
@@ -20,7 +29,7 @@ button { cursor: pointer; }
 }
 .login-panel {
   width: min(440px, 100%);
-  margin: 8vh auto 0;
+  margin: 5vh auto 0;
 }
 h1 { margin: 0 0 6px; }
 .login-panel p, .admin-header p { color: #6b7280; margin-top: 0; }
@@ -33,6 +42,10 @@ h1 { margin: 0 0 6px; }
   border-radius:9px;
   background:#fff;
 }
+.login-panel input:focus, .controls input:focus, .controls select:focus, textarea:focus, select.row-status:focus {
+  outline:3px solid rgba(22,101,52,.12);
+  border-color:#166534;
+}
 button {
   border:0;
   border-radius:9px;
@@ -41,7 +54,9 @@ button {
   color:#fff;
   font-weight:700;
 }
+button:hover:not(:disabled) { background:#14532d; }
 button.secondary { background:#e5e7eb; color:#111827; }
+button.secondary:hover:not(:disabled) { background:#d1d5db; }
 button:disabled { opacity:.5; cursor:not-allowed; }
 .login-panel button { width:100%; margin-top:16px; }
 .admin-header {
@@ -81,13 +96,12 @@ button:disabled { opacity:.5; cursor:not-allowed; }
 .bulk-actions span { margin-right:auto; color:#4b5563; }
 .table-panel { padding:0; overflow:hidden; }
 .table-scroll { overflow:auto; }
-table { width:100%; border-collapse:collapse; min-width:1000px; }
+table { width:100%; border-collapse:collapse; min-width:1060px; }
 th, td { padding:11px 10px; border-bottom:1px solid #e5e7eb; text-align:left; vertical-align:top; }
-th { background:#f9fafb; font-size:13px; color:#4b5563; }
+th { background:#f9fafb; font-size:13px; color:#4b5563; position:sticky; top:0; z-index:1; }
 td { font-size:14px; }
 td input[type="checkbox"] { width:18px; height:18px; accent-color:#166534; }
 textarea.note-input { min-width:200px; min-height:68px; resize:vertical; }
-.row-actions { display:flex; gap:6px; }
 .message { display:none; margin-top:12px; padding:10px 12px; border-radius:8px; font-size:14px; }
 .message.show { display:block; }
 .message.error { background:#fef2f2; color:#991b1b; }
@@ -100,11 +114,14 @@ textarea.note-input { min-width:200px; min-height:68px; resize:vertical; }
 }
 @media (max-width: 520px) {
   .admin-wrap { padding:16px 10px 28px; }
+  .back-link { margin-left:4px; }
   .admin-header { align-items:center; }
   .admin-header h1 { font-size:23px; }
+  .admin-header p { font-size:14px; }
   .stats { grid-template-columns:1fr 1fr; gap:8px; }
   .stats article { padding:12px; }
   .stats strong { font-size:24px; }
   .controls { grid-template-columns:1fr; }
   .bulk-actions button { width:100%; }
+  .login-panel { margin-top:2vh; }
 }
