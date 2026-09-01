@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#111827">
+  <meta name="theme-color" content="#166534">
   <meta name="robots" content="noindex,nofollow">
   <title>NV Chat - Testadores</title>
   <link rel="stylesheet" href="assets/admin.css">
 </head>
 <body>
   <main class="admin-wrap">
+    <a class="back-link" href="index.html">← Voltar ao site do NVChat</a>
+
     <section id="login-view" class="panel login-panel">
       <h1>Painel de testadores</h1>
       <p>Acesso administrativo do NVChat.</p>
@@ -19,7 +21,7 @@
         <label for="admin-password">Senha</label>
         <input id="admin-password" type="password" autocomplete="current-password" required>
         <button type="submit">Entrar</button>
-        <div id="login-message" class="message" role="status"></div>
+        <div id="login-message" class="message" role="status" aria-live="polite"></div>
       </form>
     </section>
 
@@ -32,21 +34,21 @@
         <button id="logout-button" class="secondary">Sair</button>
       </header>
 
-      <section class="stats" aria-label="Resumo">
-        <article><strong id="total-count">0</strong><span>Total de interessados</span></article>
+      <section class="stats" aria-label="Resumo dos testadores">
+        <article><strong id="total-count">0</strong><span>Total cadastrados</span></article>
         <article><strong id="interested-count">0</strong><span>Interessados</span></article>
         <article><strong id="invited-count">0</strong><span>Convidados</span></article>
         <article><strong id="active-count">0</strong><span>Ativos</span></article>
       </section>
 
       <section class="panel controls">
-        <input id="search-input" type="search" placeholder="Pesquisar por nome ou e-mail" aria-label="Pesquisar testador">
+        <input id="search-input" type="search" placeholder="Pesquisar por nome ou e-mail" aria-label="Pesquisar por nome ou e-mail">
         <select id="status-filter" aria-label="Filtrar por status">
-          <option value="all">Todos os status</option>
-          <option value="interessado">Interessado</option>
-          <option value="convidado">Convidado</option>
-          <option value="ativo">Ativo</option>
-          <option value="removido">Removido</option>
+          <option value="all">Todos</option>
+          <option value="interessado">Interessados</option>
+          <option value="convidado">Convidados</option>
+          <option value="ativo">Ativos</option>
+          <option value="removido">Removidos</option>
         </select>
         <button id="copy-filtered" class="secondary">Copiar e-mails</button>
         <button id="export-filtered" class="secondary">Exportar CSV</button>
@@ -54,25 +56,25 @@
 
       <section class="panel bulk-actions">
         <span id="selection-count">0 selecionado(s)</span>
-        <button id="mark-invited" disabled>Marcar como convidado</button>
+        <button id="mark-invited" disabled>Marcar selecionados como convidados</button>
         <button id="copy-selected" class="secondary" disabled>Copiar e-mails selecionados</button>
         <button id="export-selected" class="secondary" disabled>Exportar selecionados</button>
       </section>
 
       <section class="panel table-panel">
-        <div id="admin-message" class="message" role="status"></div>
+        <div id="admin-message" class="message" role="status" aria-live="polite"></div>
         <div class="table-scroll">
           <table>
             <thead>
               <tr>
-                <th><input id="select-all" type="checkbox" aria-label="Selecionar todos"></th>
+                <th><input id="select-all" type="checkbox" aria-label="Selecionar todos os resultados visíveis"></th>
                 <th>Nome</th>
-                <th>Gmail</th>
-                <th>Cadastro</th>
+                <th>Gmail/e-mail</th>
+                <th>Data do cadastro</th>
                 <th>Status</th>
-                <th>Convite</th>
-                <th>Observação</th>
-                <th>Ação</th>
+                <th>Data do convite</th>
+                <th>Observações</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody id="tester-rows"></tbody>
