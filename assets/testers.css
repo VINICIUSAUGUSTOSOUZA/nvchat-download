@@ -1,5 +1,5 @@
 .tester-card {
-  margin-top: 18px;
+  margin-top: 0;
 }
 
 .tester-card h2 {
@@ -131,10 +131,6 @@
 }
 
 @media (max-width: 480px) {
-  .tester-card {
-    padding: 20px 16px;
-  }
-
   .tester-card h2 {
     font-size: 20px;
   }
