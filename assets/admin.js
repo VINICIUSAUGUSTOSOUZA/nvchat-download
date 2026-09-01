@@ -278,12 +278,13 @@
       error = result.error;
     }
 
-    if (error) showMessage(adminMessage, 'Não foi possível atualizar todos os selecionados.', 'error');
-    else {
+    if (error) {
+      showMessage(adminMessage, 'Não foi possível atualizar todos os selecionados.', 'error');
+      button.disabled = false;
+    } else {
       showMessage(adminMessage, `${list.length} cadastro(s) marcado(s) como convidado.`);
       await loadTesters();
     }
-    button.disabled = false;
   });
 
   client.auth.onAuthStateChange(() => setTimeout(requireAdminSession, 0));
