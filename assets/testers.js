@@ -55,21 +55,25 @@
     var nameInput = document.getElementById('tester-name');
     var emailInput = document.getElementById('tester-email');
     var consentInput = document.getElementById('tester-consent');
-    var honeypotInput = document.getElementById('nvchat-website-check');
+    var honeypotInput = document.getElementById('nvchat-website-check') || document.getElementById('company');
 
     var name = String(nameInput.value || '').replace(/^\s+|\s+$/g, '');
     var email = normalizeEmail(emailInput.value);
     var consent = Boolean(consentInput.checked);
     var honeypot = honeypotInput ? String(honeypotInput.value || '').replace(/^\s+|\s+$/g, '') : '';
+    var elapsed = Date.now() - renderedAt;
 
-    if (Date.now() - renderedAt < 1200) {
+    if (elapsed < 1200) {
       setMessage('Aguarde um instante e tente novamente.', 'info');
       return;
     }
 
     if (honeypot) {
-      setMessage('Não foi possível enviar este cadastro. Atualize a página e tente novamente.', 'error');
-      return;
+      if (elapsed < 5000) {
+        setMessage('Aguarde alguns segundos e tente novamente.', 'info');
+        return;
+      }
+      honeypotInput.value = '';
     }
 
     if (!isEmail(email)) {
