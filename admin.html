@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#166534">
   <meta name="robots" content="noindex,nofollow">
-  <title>NV Chat - Testadores</title>
+  <title>NV Chat - Administração</title>
   <link rel="stylesheet" href="assets/admin.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
     <a class="back-link" href="index.html">← Voltar ao site do NVChat</a>
 
     <section id="login-view" class="panel login-panel">
-      <h1>Painel de testadores</h1>
+      <h1>Painel administrativo</h1>
       <p>Acesso administrativo do NVChat.</p>
       <form id="login-form">
         <label for="admin-email">E-mail</label>
@@ -28,58 +28,114 @@
     <section id="admin-view" hidden>
       <header class="admin-header">
         <div>
-          <h1>Testadores do NVChat</h1>
-          <p>Gerencie interessados, convites e participantes ativos.</p>
+          <h1>Administração do NVChat</h1>
+          <p>Gerencie testadores e seus links curtos.</p>
         </div>
         <button id="logout-button" class="secondary">Sair</button>
       </header>
 
-      <section class="stats" aria-label="Resumo dos testadores">
-        <article><strong id="total-count">0</strong><span>Total cadastrados</span></article>
-        <article><strong id="interested-count">0</strong><span>Interessados</span></article>
-        <article><strong id="invited-count">0</strong><span>Convidados</span></article>
-        <article><strong id="active-count">0</strong><span>Ativos</span></article>
+      <nav class="admin-tabs" aria-label="Áreas administrativas">
+        <button type="button" class="tab-button active" data-tab="testers-section">Testadores</button>
+        <button type="button" class="tab-button" data-tab="links-section">Encurtador de links</button>
+      </nav>
+
+      <section id="testers-section" class="admin-section">
+        <section class="stats" aria-label="Resumo dos testadores">
+          <article><strong id="total-count">0</strong><span>Total cadastrados</span></article>
+          <article><strong id="interested-count">0</strong><span>Interessados</span></article>
+          <article><strong id="invited-count">0</strong><span>Convidados</span></article>
+          <article><strong id="active-count">0</strong><span>Ativos</span></article>
+        </section>
+
+        <section class="panel controls">
+          <input id="search-input" type="search" placeholder="Pesquisar por nome ou e-mail" aria-label="Pesquisar por nome ou e-mail">
+          <select id="status-filter" aria-label="Filtrar por status">
+            <option value="all">Todos</option>
+            <option value="interessado">Interessados</option>
+            <option value="convidado">Convidados</option>
+            <option value="ativo">Ativos</option>
+            <option value="removido">Removidos</option>
+          </select>
+          <button id="copy-filtered" class="secondary">Copiar e-mails</button>
+          <button id="export-filtered" class="secondary">Exportar CSV</button>
+        </section>
+
+        <section class="panel bulk-actions">
+          <span id="selection-count">0 selecionado(s)</span>
+          <button id="mark-invited" disabled>Marcar selecionados como convidados</button>
+          <button id="copy-selected" class="secondary" disabled>Copiar e-mails selecionados</button>
+          <button id="export-selected" class="secondary" disabled>Exportar selecionados</button>
+        </section>
+
+        <section class="panel table-panel">
+          <div id="admin-message" class="message" role="status" aria-live="polite"></div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th><input id="select-all" type="checkbox" aria-label="Selecionar todos os resultados visíveis"></th>
+                  <th>Nome</th>
+                  <th>Gmail/e-mail</th>
+                  <th>Data do cadastro</th>
+                  <th>Status</th>
+                  <th>Data do convite</th>
+                  <th>Observações</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tester-rows"></tbody>
+            </table>
+          </div>
+        </section>
       </section>
 
-      <section class="panel controls">
-        <input id="search-input" type="search" placeholder="Pesquisar por nome ou e-mail" aria-label="Pesquisar por nome ou e-mail">
-        <select id="status-filter" aria-label="Filtrar por status">
-          <option value="all">Todos</option>
-          <option value="interessado">Interessados</option>
-          <option value="convidado">Convidados</option>
-          <option value="ativo">Ativos</option>
-          <option value="removido">Removidos</option>
-        </select>
-        <button id="copy-filtered" class="secondary">Copiar e-mails</button>
-        <button id="export-filtered" class="secondary">Exportar CSV</button>
-      </section>
+      <section id="links-section" class="admin-section" hidden>
+        <section class="panel shortener-panel">
+          <div>
+            <h2>Encurtar novo link</h2>
+            <p class="muted">Cole qualquer endereço http/https. Você pode escolher um apelido curto ou deixar em branco para gerar automaticamente.</p>
+          </div>
+          <form id="short-link-form" class="short-link-form">
+            <div class="field-wide">
+              <label for="short-url">Link original</label>
+              <input id="short-url" type="url" required placeholder="https://exemplo.com/pagina/grande">
+            </div>
+            <div>
+              <label for="short-code">Apelido (opcional)</label>
+              <input id="short-code" type="text" minlength="3" maxlength="32" pattern="[a-z0-9_-]+" placeholder="nvchat">
+            </div>
+            <div>
+              <label for="short-title">Nome (opcional)</label>
+              <input id="short-title" type="text" maxlength="120" placeholder="Play Store NVChat">
+            </div>
+            <button id="create-short-link" type="submit">Criar link curto</button>
+          </form>
+          <div id="short-link-message" class="message" role="status" aria-live="polite"></div>
+        </section>
 
-      <section class="panel bulk-actions">
-        <span id="selection-count">0 selecionado(s)</span>
-        <button id="mark-invited" disabled>Marcar selecionados como convidados</button>
-        <button id="copy-selected" class="secondary" disabled>Copiar e-mails selecionados</button>
-        <button id="export-selected" class="secondary" disabled>Exportar selecionados</button>
-      </section>
+        <section class="stats link-stats" aria-label="Resumo dos links">
+          <article><strong id="links-total">0</strong><span>Links criados</span></article>
+          <article><strong id="links-active">0</strong><span>Ativos</span></article>
+          <article><strong id="links-clicks">0</strong><span>Cliques</span></article>
+        </section>
 
-      <section class="panel table-panel">
-        <div id="admin-message" class="message" role="status" aria-live="polite"></div>
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th><input id="select-all" type="checkbox" aria-label="Selecionar todos os resultados visíveis"></th>
-                <th>Nome</th>
-                <th>Gmail/e-mail</th>
-                <th>Data do cadastro</th>
-                <th>Status</th>
-                <th>Data do convite</th>
-                <th>Observações</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tester-rows"></tbody>
-          </table>
-        </div>
+        <section class="panel table-panel">
+          <div class="table-scroll">
+            <table class="links-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Link curto</th>
+                  <th>Destino</th>
+                  <th>Cliques</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="short-link-rows"></tbody>
+            </table>
+          </div>
+        </section>
       </section>
     </section>
   </main>
