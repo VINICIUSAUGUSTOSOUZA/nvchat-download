@@ -17,38 +17,23 @@
         <div class="brand-mark">NV</div>
         <h1>NVChat Web</h1>
         <p id="authSubtitle">Entre com o mesmo ID e senha usados no aplicativo.</p>
-
         <form id="loginForm">
-          <label>ID do NVChat
-            <input id="loginId" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Seu ID" required />
-          </label>
-          <label>Senha
-            <input id="loginPassword" type="password" autocomplete="current-password" required />
-          </label>
+          <label>ID do NVChat<input id="loginId" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Seu ID" required /></label>
+          <label>Senha<input id="loginPassword" type="password" autocomplete="current-password" required /></label>
           <button id="loginButton" type="submit">Entrar</button>
           <button id="showRegisterButton" class="secondary-action" type="button">Criar conta</button>
           <p id="loginError" class="error" role="alert"></p>
         </form>
-
         <form id="registerForm" class="hidden">
-          <label>Nome
-            <input id="registerName" type="text" autocomplete="name" maxlength="80" required />
-          </label>
-          <label>Escolha seu ID
-            <input id="registerId" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Seu ID" required />
-          </label>
-          <label>Senha
-            <input id="registerPassword" type="password" autocomplete="new-password" minlength="8" required />
-          </label>
-          <label>Confirmar senha
-            <input id="registerConfirm" type="password" autocomplete="new-password" minlength="8" required />
-          </label>
+          <label>Nome<input id="registerName" type="text" autocomplete="name" maxlength="80" required /></label>
+          <label>Escolha seu ID<input id="registerId" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Seu ID" required /></label>
+          <label>Senha<input id="registerPassword" type="password" autocomplete="new-password" minlength="8" required /></label>
+          <label>Confirmar senha<input id="registerConfirm" type="password" autocomplete="new-password" minlength="8" required /></label>
           <small class="hint">A senha precisa ter pelo menos 8 caracteres.</small>
           <button id="registerButton" type="submit">Criar conta</button>
           <button id="showLoginButton" class="secondary-action" type="button">Já tenho conta</button>
           <p id="registerError" class="error" role="alert"></p>
         </form>
-
         <section id="recoveryView" class="recovery-view hidden" aria-live="polite">
           <h2>Conta criada</h2>
           <p>Guarde esta chave de recuperação. Sem e-mail ou telefone, ela é a forma de recuperar sua conta.</p>
@@ -61,27 +46,27 @@
 
     <section id="chatView" class="chat-view hidden">
       <aside class="sidebar">
-        <header class="sidebar-header">
-          <div><strong>NVChat</strong><small id="currentUserName">Web</small></div>
-          <button id="logoutButton" class="ghost" type="button">Sair</button>
-        </header>
+        <header class="sidebar-header"><div><strong>NVChat</strong><small id="currentUserName">Web</small></div><button id="logoutButton" class="ghost" type="button">Sair</button></header>
         <div id="conversationList" class="conversation-list"></div>
       </aside>
-
       <section class="conversation-panel">
-        <header class="conversation-header">
-          <button id="backButton" class="ghost mobile-only" type="button">‹</button>
-          <div><strong id="conversationName">Selecione uma conversa</strong><small id="conversationStatus"></small></div>
-        </header>
+        <header class="conversation-header"><button id="backButton" class="ghost mobile-only" type="button">‹</button><div><strong id="conversationName">Selecione uma conversa</strong><small id="conversationStatus"></small></div></header>
         <div id="messages" class="messages empty-state">Escolha uma conversa para começar.</div>
+        <div id="audioPreview" class="audio-preview hidden">
+          <audio id="audioPreviewPlayer" controls></audio>
+          <div class="audio-preview-actions"><button id="cancelAudioButton" class="secondary-action" type="button">Cancelar</button><button id="sendAudioButton" type="button">Enviar áudio</button></div>
+        </div>
         <form id="messageForm" class="composer hidden">
+          <input id="photoInput" type="file" accept="image/*" class="hidden" />
+          <button id="photoButton" class="composer-icon" type="button" aria-label="Enviar foto">📷</button>
+          <button id="audioButton" class="composer-icon" type="button" aria-label="Gravar áudio">🎤</button>
           <textarea id="messageInput" rows="1" maxlength="4000" placeholder="Digite uma mensagem" aria-label="Mensagem"></textarea>
-          <button type="submit">Enviar</button>
+          <button id="sendTextButton" type="submit">Enviar</button>
+          <span id="recordingStatus" class="recording-status hidden">● Gravando 00:00</span>
         </form>
       </section>
     </section>
   </main>
-
   <script src="../assets/supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.min.js"></script>
   <script src="./assets/app.js"></script>
