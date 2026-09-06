@@ -3,7 +3,7 @@
   const button = document.getElementById('notificationButton');
   const list = document.getElementById('conversationList');
 
-  if (!cfg || !window.supabase || !('serviceWorker' in navigator) || !('Notification' in window)) {
+  if (!cfg || !window.supabase || !('serviceWorker' in navigator) || !('Notification' in window) || !('PushManager' in window)) {
     if (button) {
       button.disabled = true;
       button.title = 'Notificações não suportadas neste navegador';
@@ -44,11 +44,57 @@
     }
   }
 
+  function urlBase64ToUint8Array(value) {
+    const padding = '='.repeat((4 - value.length % 4) % 4);
+    const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(base64);
+    return Uint8Array.from([...raw].map(ch => ch.charCodeAt(0)));
+  }
+
   async function ensureRegistration() {
     if (registration) return registration;
     registration = await navigator.serviceWorker.register('./sw.js', { scope: './' });
     registration = await navigator.serviceWorker.ready;
     return registration;
+  }
+
+  async function syncPushSubscription({ allowCreate = false } = {}) {
+    if (Notification.permission !== 'granted') return false;
+    const { data: sessionData } = await client.auth.getSession();
+    if (!sessionData?.session?.user?.id) return false;
+
+    const reg = await ensureRegistration();
+    let subscription = await reg.pushManager.getSubscription();
+
+    if (!subscription && allowCreate) {
+      const { data, error } = await client.functions.invoke('push-config', { body: {} });
+      if (error) throw error;
+      if (!data?.publicKey) throw new Error('Chave pública de notificação indisponível.');
+      subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(data.publicKey)
+      });
+    }
+
+    if (!subscription) return false;
+    const json = subscription.toJSON();
+    const { error } = await client.functions.invoke('push-register', {
+      body: {
+        endpoint: subscription.endpoint,
+        keys: json.keys || {},
+        userAgent: navigator.userAgent
+      }
+    });
+    if (error) throw error;
+    return true;
+  }
+
+  async function dispatchPush(message) {
+    if (!message?.id) return;
+    const { error } = await client.functions.invoke('push-message', {
+      body: { message_id: message.id }
+    });
+    if (error) throw error;
   }
 
   async function showNotification(message) {
@@ -74,7 +120,6 @@
   }
 
   async function subscribeRealtime() {
-    if (Notification.permission !== 'granted') return;
     const { data } = await client.auth.getSession();
     const session = data?.session;
     if (!session?.user?.id) return;
@@ -87,7 +132,11 @@
       .channel(`nvchat-web-notifications-${currentUserId}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Mensagens' }, payload => {
         const message = payload.new;
-        if (!message || message.remetente_id === currentUserId) return;
+        if (!message) return;
+        if (message.remetente_id === currentUserId) {
+          dispatchPush(message).catch(error => console.warn('Falha ao disparar push:', error));
+          return;
+        }
         showNotification(message).catch(() => {});
       })
       .subscribe();
@@ -119,9 +168,10 @@
       const permission = await Notification.requestPermission();
       updateButton();
       if (permission !== 'granted') return;
+      const ready = await syncPushSubscription({ allowCreate: true });
       await subscribeRealtime();
       await registration.showNotification('NVChat', {
-        body: 'Notificações ativadas neste celular.',
+        body: ready ? 'Notificações ativadas neste celular, inclusive com o NVChat fechado.' : 'Notificações ativadas neste celular.',
         icon: './icon.svg',
         badge: './icon.svg',
         tag: 'nvchat-notifications-enabled',
@@ -129,6 +179,7 @@
       });
     } catch (error) {
       console.warn('Falha ao ativar notificações do NVChat:', error);
+      if (button) button.title = 'Não foi possível ativar as notificações. Toque para tentar novamente.';
     }
   });
 
@@ -146,11 +197,13 @@
       return;
     }
     subscribeRealtime().catch(() => {});
+    syncPushSubscription({ allowCreate: false }).catch(() => {});
   });
 
   ensureRegistration().catch(() => {});
   updateButton();
   subscribeRealtime().catch(() => {});
+  syncPushSubscription({ allowCreate: false }).catch(() => {});
 
   const fromNotification = new URL(location.href).searchParams.get('conversation');
   if (fromNotification) {
