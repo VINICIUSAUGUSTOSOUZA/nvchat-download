@@ -1,5 +1,5 @@
-const CACHE='nvchat-web-v10';
-const APP_SHELL=['./','./index.html','./manifest.webmanifest','./icon.svg','./assets/app.css','./assets/app.js','./assets/search.js','./assets/notifications.js','../assets/supabase-config.js'];
+const CACHE='nvchat-web-v11';
+const APP_SHELL=['./','./index.html','./manifest.webmanifest','./icon.svg','./assets/app.css','./assets/install.css','./assets/app.js','./assets/search.js','./assets/notifications.js','./assets/install.js','../assets/supabase-config.js'];
 
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
