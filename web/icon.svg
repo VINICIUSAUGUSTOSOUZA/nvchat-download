@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#111827"/>
+  <path d="M126 148c0-31 25-56 56-56h148c31 0 56 25 56 56v128c0 31-25 56-56 56h-88l-83 65 17-65h-4c-31 0-56-25-56-56V148z" fill="#fff"/>
+  <text x="256" y="252" text-anchor="middle" font-family="Arial,sans-serif" font-size="112" font-weight="800" fill="#111827">NV</text>
+</svg>
