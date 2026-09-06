@@ -16,13 +16,46 @@
       <div class="auth-card">
         <div class="brand-mark">NV</div>
         <h1>NVChat Web</h1>
-        <p>Entre com a mesma conta usada no aplicativo.</p>
+        <p id="authSubtitle">Entre com o mesmo ID e senha usados no aplicativo.</p>
+
         <form id="loginForm">
-          <label>E-mail<input id="email" type="email" autocomplete="email" required /></label>
-          <label>Senha<input id="password" type="password" autocomplete="current-password" required /></label>
+          <label>ID do NVChat
+            <input id="loginId" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Seu ID" required />
+          </label>
+          <label>Senha
+            <input id="loginPassword" type="password" autocomplete="current-password" required />
+          </label>
           <button id="loginButton" type="submit">Entrar</button>
+          <button id="showRegisterButton" class="secondary-action" type="button">Criar conta</button>
           <p id="loginError" class="error" role="alert"></p>
         </form>
+
+        <form id="registerForm" class="hidden">
+          <label>Nome
+            <input id="registerName" type="text" autocomplete="name" maxlength="80" required />
+          </label>
+          <label>Escolha seu ID
+            <input id="registerId" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Seu ID" required />
+          </label>
+          <label>Senha
+            <input id="registerPassword" type="password" autocomplete="new-password" minlength="8" required />
+          </label>
+          <label>Confirmar senha
+            <input id="registerConfirm" type="password" autocomplete="new-password" minlength="8" required />
+          </label>
+          <small class="hint">A senha precisa ter pelo menos 8 caracteres.</small>
+          <button id="registerButton" type="submit">Criar conta</button>
+          <button id="showLoginButton" class="secondary-action" type="button">Já tenho conta</button>
+          <p id="registerError" class="error" role="alert"></p>
+        </form>
+
+        <section id="recoveryView" class="recovery-view hidden" aria-live="polite">
+          <h2>Conta criada</h2>
+          <p>Guarde esta chave de recuperação. Sem e-mail ou telefone, ela é a forma de recuperar sua conta.</p>
+          <code id="recoveryKey"></code>
+          <button id="copyRecoveryButton" type="button">Copiar chave</button>
+          <button id="finishRecoveryButton" class="secondary-action" type="button">Guardei — entrar</button>
+        </section>
       </div>
     </section>
 
