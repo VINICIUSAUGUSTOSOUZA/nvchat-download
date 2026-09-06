@@ -6,7 +6,7 @@
   }
 
   const client = window.supabase.createClient(cfg.url, cfg.publishableKey, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
   });
 
   const el = (id) => document.getElementById(id);
@@ -32,6 +32,7 @@
   let conversationsChannel = null;
   let profiles = new Map();
   let lastRegisteredId = '';
+  let bootingUserId = null;
 
   const initials = (name = 'NV') => name.trim().split(/\s+/).slice(0, 2).map(p => p[0] || '').join('').toUpperCase() || 'NV';
   const formatTime = (date) => new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(date));
@@ -63,11 +64,8 @@
 
     const body = await response.text();
     if (!response.ok) throw new Error(parseError(body, 'Não foi possível concluir a operação.'));
-    try {
-      return JSON.parse(body);
-    } catch (_) {
-      throw new Error('Resposta inválida do servidor.');
-    }
+    try { return JSON.parse(body); }
+    catch (_) { throw new Error('Resposta inválida do servidor.'); }
   }
 
   function showAuthMode(mode) {
@@ -90,7 +88,8 @@
   }
 
   async function loadCurrentProfile() {
-    const { data } = await client.from('Usuarios').select('id,nome,id_publico,iniciais').eq('id', currentUser.id).maybeSingle();
+    const { data, error } = await client.from('Usuarios').select('id,nome,id_publico,iniciais').eq('id', currentUser.id).maybeSingle();
+    if (error) throw error;
     el('currentUserName').textContent = data?.nome || data?.id_publico || 'Usuário';
   }
 
@@ -101,11 +100,7 @@
       .or(`usuario_a.eq.${currentUser.id},usuario_b.eq.${currentUser.id}`)
       .order('updated_at', { ascending: false });
 
-    if (error) {
-      conversationList.textContent = 'Não foi possível carregar as conversas.';
-      return;
-    }
-
+    if (error) throw error;
     const conversations = data || [];
     const otherIds = [...new Set(conversations.map(c => c.usuario_a === currentUser.id ? c.usuario_b : c.usuario_a))];
     profiles = new Map();
@@ -132,11 +127,9 @@
       button.type = 'button';
       button.className = 'conversation-item';
       button.dataset.id = conversation.id;
-
       const avatar = document.createElement('span');
       avatar.className = 'avatar';
       avatar.textContent = user?.iniciais || initials(user?.nome);
-
       const meta = document.createElement('span');
       meta.className = 'conversation-meta';
       const name = document.createElement('strong');
@@ -154,14 +147,12 @@
     if (!message || message.apagada_em) return;
     const box = document.createElement('div');
     box.className = `message${message.remetente_id === currentUser.id ? ' mine' : ''}`;
-
     const body = document.createElement('span');
     if (message.tipo === 'texto') body.textContent = message.texto || '';
     else if (message.tipo === 'imagem') body.textContent = '📷 Imagem — abra no aplicativo nesta primeira versão web.';
     else if (message.tipo === 'audio') body.textContent = '🎤 Áudio — reprodução web entra na próxima etapa.';
     else if (message.tipo === 'localizacao') body.textContent = '📍 Localização compartilhada.';
     else body.textContent = message.texto || `[${message.tipo}]`;
-
     const time = document.createElement('span');
     time.className = 'time';
     time.textContent = formatTime(message.created_at);
@@ -178,19 +169,10 @@
     messageForm.classList.remove('hidden');
     messagesEl.classList.remove('empty-state');
     messagesEl.textContent = '';
-
-    const { data, error } = await client
-      .from('Mensagens')
+    const { data, error } = await client.from('Mensagens')
       .select('id,conversa_id,remetente_id,tipo,texto,arquivo_path,mime_type,duracao_ms,created_at,apagada_em')
-      .eq('conversa_id', conversation.id)
-      .order('created_at', { ascending: true })
-      .limit(500);
-
-    if (error) {
-      messagesEl.textContent = 'Não foi possível carregar as mensagens.';
-      return;
-    }
-
+      .eq('conversa_id', conversation.id).order('created_at', { ascending: true }).limit(500);
+    if (error) { messagesEl.textContent = 'Não foi possível carregar as mensagens.'; return; }
     (data || []).forEach(appendMessage);
     messagesEl.scrollTop = messagesEl.scrollHeight;
     subscribeToMessages(conversation.id);
@@ -199,75 +181,79 @@
 
   function subscribeToMessages(conversationId) {
     if (messageChannel) client.removeChannel(messageChannel);
-    messageChannel = client
-      .channel(`web-messages-${conversationId}`)
+    messageChannel = client.channel(`web-messages-${conversationId}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Mensagens', filter: `conversa_id=eq.${conversationId}` }, payload => {
         if (payload.new?.conversa_id !== currentConversation?.id) return;
         appendMessage(payload.new);
         messagesEl.scrollTop = messagesEl.scrollHeight;
-      })
-      .subscribe();
+      }).subscribe();
   }
 
   async function sendMessage(event) {
     event.preventDefault();
     const text = messageInput.value.trim();
     if (!text || !currentConversation) return;
-
     const submit = messageForm.querySelector('button[type="submit"]');
     submit.disabled = true;
-    const { error } = await client.from('Mensagens').insert({
-      conversa_id: currentConversation.id,
-      remetente_id: currentUser.id,
-      tipo: 'texto',
-      texto: text
-    });
+    const { error } = await client.from('Mensagens').insert({ conversa_id: currentConversation.id, remetente_id: currentUser.id, tipo: 'texto', texto: text });
     submit.disabled = false;
-
-    if (!error) {
-      messageInput.value = '';
-      messageInput.style.height = '';
-    } else {
-      alert('Não foi possível enviar a mensagem.');
-    }
+    if (!error) { messageInput.value = ''; messageInput.style.height = ''; }
+    else alert('Não foi possível enviar a mensagem.');
   }
 
   function subscribeToConversationChanges() {
     if (conversationsChannel) client.removeChannel(conversationsChannel);
-    conversationsChannel = client
-      .channel('web-conversations')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'Conversas' }, () => loadConversations())
-      .subscribe();
+    conversationsChannel = client.channel('web-conversations')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'Conversas' }, () => loadConversations().catch(() => {})).subscribe();
   }
 
-  async function boot(session) {
-    currentUser = session?.user || null;
-    setSignedIn(Boolean(currentUser));
-    if (!currentUser) return;
-    await Promise.all([loadCurrentProfile(), loadConversations()]);
-    subscribeToConversationChanges();
+  async function boot(session, force = false) {
+    const user = session?.user || null;
+    if (!user) {
+      currentUser = null;
+      bootingUserId = null;
+      setSignedIn(false);
+      return;
+    }
+    if (!force && bootingUserId === user.id && currentUser?.id === user.id) return;
+    bootingUserId = user.id;
+    currentUser = user;
+    setSignedIn(true);
+    conversationList.textContent = 'Carregando conversas…';
+    try {
+      await loadCurrentProfile();
+      await loadConversations();
+      subscribeToConversationChanges();
+    } catch (error) {
+      console.error('Falha ao iniciar sessão web:', error);
+      conversationList.textContent = 'Sessão iniciada, mas não foi possível carregar as conversas.';
+    }
   }
 
   loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     loginError.textContent = '';
     loginButton.disabled = true;
+    loginButton.textContent = 'Entrando…';
     const id = el('loginId').value.trim();
     const password = el('loginPassword').value;
-
     try {
       const data = await callFunction('entrar', { id_publico: id, senha: password });
-      const session = data?.sessao;
-      if (!session?.access_token || !session?.refresh_token) throw new Error('Sessão inválida recebida do servidor.');
-      const { error } = await client.auth.setSession({
-        access_token: session.access_token,
-        refresh_token: session.refresh_token
+      const tokenSession = data?.sessao;
+      if (!tokenSession?.access_token || !tokenSession?.refresh_token) throw new Error('Sessão inválida recebida do servidor.');
+      const { data: sessionData, error } = await client.auth.setSession({
+        access_token: tokenSession.access_token,
+        refresh_token: tokenSession.refresh_token
       });
       if (error) throw error;
+      if (!sessionData?.session?.user) throw new Error('Não foi possível confirmar a sessão.');
+      await boot(sessionData.session, true);
     } catch (error) {
       loginError.textContent = error.message || 'ID ou senha inválidos.';
+      setSignedIn(false);
     } finally {
       loginButton.disabled = false;
+      loginButton.textContent = 'Entrar';
     }
   });
 
@@ -278,16 +264,8 @@
     const id = el('registerId').value.trim();
     const password = el('registerPassword').value;
     const confirm = el('registerConfirm').value;
-
-    if (password !== confirm) {
-      registerError.textContent = 'As senhas não são iguais.';
-      return;
-    }
-    if (password.length < 8) {
-      registerError.textContent = 'A senha precisa ter pelo menos 8 caracteres.';
-      return;
-    }
-
+    if (password !== confirm) { registerError.textContent = 'As senhas não são iguais.'; return; }
+    if (password.length < 8) { registerError.textContent = 'A senha precisa ter pelo menos 8 caracteres.'; return; }
     registerButton.disabled = true;
     try {
       const data = await callFunction('criar-conta', { nome: name, id_publico: id, senha: password });
@@ -296,50 +274,28 @@
       el('recoveryKey').textContent = data.chave_recuperacao;
       registerForm.reset();
       showAuthMode('recovery');
-    } catch (error) {
-      registerError.textContent = error.message || 'Não foi possível criar a conta.';
-    } finally {
-      registerButton.disabled = false;
-    }
+    } catch (error) { registerError.textContent = error.message || 'Não foi possível criar a conta.'; }
+    finally { registerButton.disabled = false; }
   });
 
   el('showRegisterButton').addEventListener('click', () => showAuthMode('register'));
   el('showLoginButton').addEventListener('click', () => showAuthMode('login'));
-  el('finishRecoveryButton').addEventListener('click', () => {
-    showAuthMode('login');
-    el('loginId').value = lastRegisteredId;
-    el('loginPassword').focus();
-  });
+  el('finishRecoveryButton').addEventListener('click', () => { showAuthMode('login'); el('loginId').value = lastRegisteredId; el('loginPassword').focus(); });
   el('copyRecoveryButton').addEventListener('click', async () => {
     const key = el('recoveryKey').textContent;
-    try {
-      await navigator.clipboard.writeText(key);
-      el('copyRecoveryButton').textContent = 'Chave copiada';
-    } catch (_) {
-      alert('Selecione a chave acima e copie manualmente.');
-    }
+    try { await navigator.clipboard.writeText(key); el('copyRecoveryButton').textContent = 'Chave copiada'; }
+    catch (_) { alert('Selecione a chave acima e copie manualmente.'); }
   });
-
-  el('logoutButton').addEventListener('click', async () => {
-    await client.auth.signOut();
-    currentConversation = null;
-    chatView.classList.remove('open-conversation');
-  });
+  el('logoutButton').addEventListener('click', async () => { await client.auth.signOut(); currentConversation = null; chatView.classList.remove('open-conversation'); });
   el('backButton').addEventListener('click', () => chatView.classList.remove('open-conversation'));
   messageForm.addEventListener('submit', sendMessage);
-  messageInput.addEventListener('input', () => {
-    messageInput.style.height = 'auto';
-    messageInput.style.height = `${Math.min(messageInput.scrollHeight, 130)}px`;
-  });
-  messageInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      messageForm.requestSubmit();
-    }
-  });
+  messageInput.addEventListener('input', () => { messageInput.style.height = 'auto'; messageInput.style.height = `${Math.min(messageInput.scrollHeight, 130)}px`; });
+  messageInput.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); messageForm.requestSubmit(); } });
 
-  client.auth.onAuthStateChange((_event, session) => boot(session));
-  client.auth.getSession().then(({ data }) => boot(data.session));
+  client.auth.onAuthStateChange((_event, session) => {
+    setTimeout(() => boot(session).catch(console.error), 0);
+  });
+  client.auth.getSession().then(({ data }) => boot(data.session).catch(console.error));
 
   if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
 })();
