@@ -1,4 +1,4 @@
-const CACHE='nvchat-web-v8';
+const CACHE='nvchat-web-v9';
 const APP_SHELL=['./','./index.html','./manifest.webmanifest','./icon.svg','./assets/app.css','./assets/app.js','./assets/search.js','./assets/notifications.js','../assets/supabase-config.js'];
 
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting())));
@@ -17,19 +17,23 @@ self.addEventListener('fetch',event=>{
 });
 
 self.addEventListener('push',event=>{
-  let payload={};
-  try{payload=event.data?event.data.json():{}}catch{payload={body:event.data?.text?.()||'Você recebeu uma nova mensagem.'}}
-  const title=payload.title||'NVChat — nova mensagem';
-  const options={
-    body:payload.body||'Você recebeu uma nova mensagem.',
-    icon:payload.icon||'./icon.svg',
-    badge:payload.badge||'./icon.svg',
-    tag:payload.tag||`nvchat-${payload.conversationId||'message'}`,
-    renotify:true,
-    vibrate:[180,80,180],
-    data:{conversationId:payload.conversationId||payload.data?.conversationId||null,url:payload.url||payload.data?.url||'./'}
-  };
-  event.waitUntil(self.registration.showNotification(title,options));
+  event.waitUntil((async()=>{
+    let payload={};
+    try{payload=event.data?event.data.json():{}}catch{payload={body:event.data?.text?.()||'Você recebeu uma nova mensagem.'}}
+    const windows=await clients.matchAll({type:'window',includeUncontrolled:true});
+    if(windows.some(client=>client.visibilityState==='visible'&&client.focused))return;
+    const title=payload.title||'NVChat — nova mensagem';
+    const options={
+      body:payload.body||'Você recebeu uma nova mensagem.',
+      icon:payload.icon||'./icon.svg',
+      badge:payload.badge||'./icon.svg',
+      tag:payload.tag||`nvchat-${payload.conversationId||'message'}`,
+      renotify:true,
+      vibrate:[180,80,180],
+      data:{conversationId:payload.conversationId||payload.data?.conversationId||null,url:payload.url||payload.data?.url||'./'}
+    };
+    await self.registration.showNotification(title,options);
+  })());
 });
 
 self.addEventListener('notificationclick',event=>{
