@@ -13,8 +13,12 @@
   const authView = el('authView');
   const chatView = el('chatView');
   const loginForm = el('loginForm');
+  const registerForm = el('registerForm');
+  const recoveryView = el('recoveryView');
   const loginButton = el('loginButton');
+  const registerButton = el('registerButton');
   const loginError = el('loginError');
+  const registerError = el('registerError');
   const conversationList = el('conversationList');
   const messagesEl = el('messages');
   const messageForm = el('messageForm');
@@ -27,18 +31,67 @@
   let messageChannel = null;
   let conversationsChannel = null;
   let profiles = new Map();
+  let lastRegisteredId = '';
 
   const initials = (name = 'NV') => name.trim().split(/\s+/).slice(0, 2).map(p => p[0] || '').join('').toUpperCase() || 'NV';
   const formatTime = (date) => new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(date));
 
+  function parseError(body, fallback) {
+    try {
+      const data = JSON.parse(body);
+      return data.erro || data.message || data.msg || fallback;
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  async function callFunction(name, payload) {
+    let response;
+    try {
+      response = await fetch(`${cfg.url.replace(/\/$/, '')}/functions/v1/${name}`, {
+        method: 'POST',
+        headers: {
+          apikey: cfg.publishableKey,
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+    } catch (error) {
+      throw new Error(`Falha de conexão: ${error.message || 'verifique sua internet.'}`);
+    }
+
+    const body = await response.text();
+    if (!response.ok) throw new Error(parseError(body, 'Não foi possível concluir a operação.'));
+    try {
+      return JSON.parse(body);
+    } catch (_) {
+      throw new Error('Resposta inválida do servidor.');
+    }
+  }
+
+  function showAuthMode(mode) {
+    loginError.textContent = '';
+    registerError.textContent = '';
+    loginForm.classList.toggle('hidden', mode !== 'login');
+    registerForm.classList.toggle('hidden', mode !== 'register');
+    recoveryView.classList.toggle('hidden', mode !== 'recovery');
+    el('authSubtitle').textContent = mode === 'register'
+      ? 'Crie sua conta do NVChat sem e-mail ou telefone.'
+      : mode === 'recovery'
+        ? 'Sua conta foi criada com sucesso.'
+        : 'Entre com o mesmo ID e senha usados no aplicativo.';
+  }
+
   function setSignedIn(signedIn) {
     authView.classList.toggle('hidden', signedIn);
     chatView.classList.toggle('hidden', !signedIn);
+    if (!signedIn) showAuthMode('login');
   }
 
   async function loadCurrentProfile() {
     const { data } = await client.from('Usuarios').select('id,nome,id_publico,iniciais').eq('id', currentUser.id).maybeSingle();
-    el('currentUserName').textContent = data?.nome || currentUser.email || 'Usuário';
+    el('currentUserName').textContent = data?.nome || data?.id_publico || 'Usuário';
   }
 
   async function loadConversations() {
@@ -199,12 +252,79 @@
     event.preventDefault();
     loginError.textContent = '';
     loginButton.disabled = true;
-    const { error } = await client.auth.signInWithPassword({ email: el('email').value.trim(), password: el('password').value });
-    loginButton.disabled = false;
-    if (error) loginError.textContent = 'E-mail ou senha inválidos.';
+    const id = el('loginId').value.trim();
+    const password = el('loginPassword').value;
+
+    try {
+      const data = await callFunction('entrar', { id_publico: id, senha: password });
+      const session = data?.sessao;
+      if (!session?.access_token || !session?.refresh_token) throw new Error('Sessão inválida recebida do servidor.');
+      const { error } = await client.auth.setSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token
+      });
+      if (error) throw error;
+    } catch (error) {
+      loginError.textContent = error.message || 'ID ou senha inválidos.';
+    } finally {
+      loginButton.disabled = false;
+    }
   });
 
-  el('logoutButton').addEventListener('click', () => client.auth.signOut());
+  registerForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    registerError.textContent = '';
+    const name = el('registerName').value.trim();
+    const id = el('registerId').value.trim();
+    const password = el('registerPassword').value;
+    const confirm = el('registerConfirm').value;
+
+    if (password !== confirm) {
+      registerError.textContent = 'As senhas não são iguais.';
+      return;
+    }
+    if (password.length < 8) {
+      registerError.textContent = 'A senha precisa ter pelo menos 8 caracteres.';
+      return;
+    }
+
+    registerButton.disabled = true;
+    try {
+      const data = await callFunction('criar-conta', { nome: name, id_publico: id, senha: password });
+      if (!data?.chave_recuperacao) throw new Error('A conta foi criada, mas a chave de recuperação não foi retornada.');
+      lastRegisteredId = id;
+      el('recoveryKey').textContent = data.chave_recuperacao;
+      registerForm.reset();
+      showAuthMode('recovery');
+    } catch (error) {
+      registerError.textContent = error.message || 'Não foi possível criar a conta.';
+    } finally {
+      registerButton.disabled = false;
+    }
+  });
+
+  el('showRegisterButton').addEventListener('click', () => showAuthMode('register'));
+  el('showLoginButton').addEventListener('click', () => showAuthMode('login'));
+  el('finishRecoveryButton').addEventListener('click', () => {
+    showAuthMode('login');
+    el('loginId').value = lastRegisteredId;
+    el('loginPassword').focus();
+  });
+  el('copyRecoveryButton').addEventListener('click', async () => {
+    const key = el('recoveryKey').textContent;
+    try {
+      await navigator.clipboard.writeText(key);
+      el('copyRecoveryButton').textContent = 'Chave copiada';
+    } catch (_) {
+      alert('Selecione a chave acima e copie manualmente.');
+    }
+  });
+
+  el('logoutButton').addEventListener('click', async () => {
+    await client.auth.signOut();
+    currentConversation = null;
+    chatView.classList.remove('open-conversation');
+  });
   el('backButton').addEventListener('click', () => chatView.classList.remove('open-conversation'));
   messageForm.addEventListener('submit', sendMessage);
   messageInput.addEventListener('input', () => {
