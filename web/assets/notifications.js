@@ -5,11 +5,19 @@
   const prompt = document.getElementById('notificationPrompt');
   const enableButton = document.getElementById('enableNotificationsButton');
   const dismissButton = document.getElementById('dismissNotificationsButton');
-  const DISMISS_KEY = 'nvchat-notification-prompt-dismissed';
+  const promptTitle = prompt?.querySelector('.notification-prompt-copy strong');
+  const promptText = prompt?.querySelector('.notification-prompt-copy span');
+  const DISMISS_KEY = 'nvchat-notification-prompt-dismissed-v2';
 
   if (!cfg || !window.supabase || !('serviceWorker' in navigator) || !('Notification' in window) || !('PushManager' in window)) {
     if (button) { button.disabled = true; button.title = 'Notificações não suportadas neste navegador'; }
-    prompt?.classList.add('hidden');
+    if (prompt) {
+      prompt.classList.remove('hidden');
+      if (promptTitle) promptTitle.textContent = 'Notificações indisponíveis';
+      if (promptText) promptText.textContent = 'Este navegador não oferece suporte completo a notificações do NVChat. Abra pelo Chrome atualizado.';
+      enableButton?.classList.add('hidden');
+      dismissButton?.classList.remove('hidden');
+    }
     return;
   }
 
@@ -27,15 +35,29 @@
   function updateButton() {
     if (!button) return;
     if (Notification.permission === 'granted') { button.textContent='🔔'; button.classList.add('enabled'); button.title='Notificações ativadas'; }
-    else if (Notification.permission === 'denied') { button.textContent='🔕'; button.classList.remove('enabled'); button.title='Notificações bloqueadas no navegador'; }
+    else if (Notification.permission === 'denied') { button.textContent='🔕'; button.classList.remove('enabled'); button.title='Notificações bloqueadas — toque para ver como liberar'; }
     else { button.textContent='🔔'; button.classList.remove('enabled'); button.title='Ativar notificações'; }
   }
 
   function updatePrompt(session) {
     if (!prompt) return;
+    if (!session?.user?.id || Notification.permission === 'granted') { prompt.classList.add('hidden'); return; }
+
+    if (Notification.permission === 'denied') {
+      prompt.classList.remove('hidden');
+      if (promptTitle) promptTitle.textContent = 'Notificações estão bloqueadas';
+      if (promptText) promptText.textContent = 'No Android, abra as informações deste site/app e permita Notificações. Depois volte ao NVChat.';
+      if (enableButton) enableButton.textContent = 'Ver como liberar';
+      dismissButton?.classList.remove('hidden');
+      return;
+    }
+
     const dismissed = localStorage.getItem(DISMISS_KEY) === '1';
-    const shouldShow = !!session?.user?.id && Notification.permission === 'default' && !dismissed;
-    prompt.classList.toggle('hidden', !shouldShow);
+    prompt.classList.toggle('hidden', dismissed);
+    if (promptTitle) promptTitle.textContent = 'Não perca nenhuma mensagem';
+    if (promptText) promptText.textContent = 'Ative as notificações para receber novas mensagens mesmo com o NVChat fechado.';
+    if (enableButton) enableButton.textContent = 'Ativar notificações';
+    dismissButton?.classList.remove('hidden');
   }
 
   function urlBase64ToUint8Array(value) {
@@ -83,6 +105,10 @@
   function openConversationWhenReady(conversationId){if(!conversationId||clickConversation(conversationId)||!list)return;const observer=new MutationObserver(()=>{if(!clickConversation(conversationId))return;observer.disconnect();});observer.observe(list,{childList:true,subtree:true});setTimeout(()=>observer.disconnect(),10000);}
 
   async function activateNotifications(){
+    if (Notification.permission === 'denied') {
+      alert('As notificações estão bloqueadas. No Android: abra as informações do site/app NVChat > Notificações > Permitir. Se estiver no Chrome, toque no cadeado/ícone do site ou em ⋮ > Configurações do site > Notificações.');
+      return false;
+    }
     try{
       await ensureRegistration();const permission=await Notification.requestPermission();updateButton();
       const{data}=await client.auth.getSession();updatePrompt(data?.session);
@@ -90,7 +116,7 @@
       localStorage.removeItem(DISMISS_KEY);prompt?.classList.add('hidden');
       const ready=await syncPushSubscription({allowCreate:true});await subscribeRealtime();
       await registration.showNotification('NVChat',{body:ready?'Notificações ativadas neste celular, inclusive com o NVChat fechado.':'Notificações ativadas neste celular.',icon:'./icon.svg',badge:'./icon.svg',tag:'nvchat-notifications-enabled',data:{url:'./'}});return true;
-    }catch(error){console.warn('Falha ao ativar notificações do NVChat:',error);if(button)button.title='Não foi possível ativar as notificações. Toque para tentar novamente.';return false;}
+    }catch(error){console.warn('Falha ao ativar notificações do NVChat:',error);if(button)button.title='Não foi possível ativar as notificações. Toque para tentar novamente.';alert('Não foi possível concluir a ativação das notificações. Atualize o Chrome e tente novamente pelo botão de notificações.');return false;}
   }
 
   button?.addEventListener('click',activateNotifications);
